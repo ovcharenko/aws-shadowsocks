@@ -27,6 +27,28 @@ The deployment requires several parameters defined in the CloudFormation templat
 8. Review your settings and acknowledge that AWS CloudFormation might create IAM resources, then click "Create Stack".
 9. After the stack creation is complete, the IP address, Shadowsocks server port, and encryption method are provided in the "Outputs" tab of the CloudFormation stack.
 
+## Client Configuration
+The actions outlined are one-time procedures. The server, following restarts or recoveries, will continue to utilize the initially generated key.
+
+1. Retrieve `/home/shadowsocks/ss.json` from the server using Connect to instance > Session manager session.
+2. Modify the `server` variable with the server IP obtained from the CloudFormation stack output.
+3. Insert `local_address` and `local_port` keys to the JSON. The final [configuration](https://shadowsocks.org/doc/configs.html) will appear as follows:
+   ```json
+    {
+      "server": "...",
+      "server_port": ...,
+      "password": "...",
+      "timeout": 300,
+      "method": "2022-blake3-chacha20-poly1305",
+      "local_address": "127.0.0.1",
+      "local_port": 8008
+    }
+    ```
+
+4. Install [client](https://github.com/shadowsocks/shadowsocks-rust)
+5. Run `sslocal -c <configuration json file>` to start the client.
+6. Adjust your system settings to use the above as SOCK5 proxy with the defined `local_address` and `local_port`.
+
 ## Security
 
 The deployed stack includes a VPC with a Public Subnet and an Internet Gateway. The Shadowsocks server is deployed to this VPC and utilizes an EC2 InstanceProfile (with SSM and EC2 Policies) for AWS integration. The server is accessible via an EIP, and all communication to the server via the specified ServerPort is permitted through a SecurityGroup. Please ensure that the Password for the Shadowsocks server is stored securely.
